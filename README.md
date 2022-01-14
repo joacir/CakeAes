@@ -3,13 +3,11 @@ Plugin do CakePHP para criptografia de campos usando AES-256
 
 ## Instalação
 
-Clone o projeto na pasta `[APP]/plugins`
-```
-git clone git@github.com:aelian-repo/CakeAes.git CakeAes
-```
-
 Inclua o plugin no composer.json do app:
 ```
+    "require": {
+        "joacir/cake-aes": "^1.0",
+    },
     "autoload": {
         "psr-4": {
             "CakeAes\\": "plugins/CakeAes/src/"
