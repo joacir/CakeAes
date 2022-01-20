@@ -9,7 +9,6 @@ use Cake\Database\Expression\QueryExpression;
 use Cake\Datasource\EntityInterface;
 use Cake\Event\EventInterface;
 use Cake\ORM\Behavior;
-use Cake\ORM\Table;
 use Cake\ORM\Query;
 use Cake\Utility\Security;
 
@@ -25,10 +24,11 @@ class EncryptBehavior extends Behavior
         if (!empty($config['fields'])) {
             $this->_table->encryptFields = $config['fields'];
         }
-    }    
+    }
 
     public function beforeSave(EventInterface $event, EntityInterface $entity, ArrayObject $options): void
-    { 
+    {
+        $entity->setVirtual([]);
         foreach ($this->_table->encryptFields as $field) {
             $value = $entity->get($field);
             if (!empty($value)) {
@@ -67,19 +67,6 @@ class EncryptBehavior extends Behavior
         $query = $this->decryptSelect($query);
         $query = $this->decryptWhere($query);
         $query = $this->decryptOrder($query);
-        $this->setDecryptDefaultTypes($query);
-    }
-
-    public function setDecryptDefaultTypes(Query $query): void
-    {
-        $typeMap = $query->getTypeMap();
-        $types = $typeMap->toArray();
-        foreach ($types as $field => $type) {
-            if ($type == 'binary') {
-                $types[$field] = 'string';
-            }
-        }
-        $typeMap->setDefaults($types);
     }
 
     /**
@@ -102,12 +89,12 @@ class EncryptBehavior extends Behavior
                 $table = $this->_table->getAlias();
                 if (strpos($field, '.') !== false) {
                     list($table, $field) = explode('.', $field);
-                }                
+                }
                 $virtual = \is_numeric($virtual) ? $table . '__' . $field : $virtual;
                 $fields[$virtual] = $this->decryptField($table . '.' . $field);
             } else {
                 $fields[$virtual] = $field;
-            }   
+            }
         }
         $query = $query->select($fields, true);
 
@@ -129,13 +116,13 @@ class EncryptBehavior extends Behavior
                     $field = $condition->getField();
                     if ($this->isEncrypted($field)) {
                         $condition->setField($this->decryptField($field));
-                    }    
+                    }
                 }
-    
+
                 return $condition;
-            });    
+            });
         }
-  
+
         return $query;
     }
 
@@ -155,7 +142,7 @@ class EncryptBehavior extends Behavior
                 }
 
                 return $direction;
-            });    
+            });
         }
 
         return $query;
@@ -174,14 +161,14 @@ class EncryptBehavior extends Behavior
             $table = null;
             if (strpos($field, '.') !== false) {
                 list($table, $field) = explode('.', $field);
-            }            
+            }
             if (empty($table) || $table == $this->_table->getAlias()) {
-                $isEncrypted = in_array($field, $this->_table->encryptFields);    
+                $isEncrypted = in_array($field, $this->_table->encryptFields);
             } else {
                 if (!empty($this->_table->{$table}) && $this->_table->{$table}->hasBehavior('Encrypt')) {
-                    $isEncrypted = $this->_table->{$table}->isEncrypted($field);                    
+                    $isEncrypted = $this->_table->{$table}->isEncrypted($field);
                 }
-            } 
+            }
         }
 
         return $isEncrypted;
@@ -195,57 +182,57 @@ class EncryptBehavior extends Behavior
      * @return QueryExpression Expressão SQL para comparação do campo descriptografado
      */
     public function decryptEq(string $fieldName, string $value): QueryExpression
-    {        
+    {
         $query = $this->_table->find();
         $expressioEquals = $query->newExpr()
             ->eq($this->decryptField($fieldName), $value);
 
-        return $expressioEquals;            
+        return $expressioEquals;
     }
 
     public function decryptNotEq(string $fieldName, string $value): QueryExpression
-    {        
+    {
         $query = $this->_table->find();
         $expressioEquals = $query->newExpr()
             ->notEq($this->decryptField($fieldName), $value);
 
-        return $expressioEquals;            
+        return $expressioEquals;
     }
 
     public function decryptLike(string $fieldName, string $value): QueryExpression
-    {        
+    {
         $query = $this->_table->find();
         $expressioEquals = $query->newExpr()
             ->like($this->decryptField($fieldName), $value);
 
-        return $expressioEquals;            
+        return $expressioEquals;
     }
 
     public function decryptNotLike(string $fieldName, string $value): QueryExpression
-    {        
+    {
         $query = $this->_table->find();
         $expressioEquals = $query->newExpr()
             ->notLike($this->decryptField($fieldName), $value);
 
-        return $expressioEquals;            
+        return $expressioEquals;
     }
 
     public function decryptIn(string $fieldName, string $value): QueryExpression
-    {        
+    {
         $query = $this->_table->find();
         $expressioEquals = $query->newExpr()
             ->in($this->decryptField($fieldName), $value);
 
-        return $expressioEquals;            
+        return $expressioEquals;
     }
 
     public function decryptNotIn(string $fieldName, string $value): QueryExpression
-    {        
+    {
         $query = $this->_table->find();
         $expressioEquals = $query->newExpr()
             ->notIn($this->decryptField($fieldName), $value);
 
-        return $expressioEquals;            
+        return $expressioEquals;
     }
 
     /**
@@ -254,7 +241,7 @@ class EncryptBehavior extends Behavior
      * @param string $fieldName nome do campo
      * @return QueryExpression Expressão SQL para descriptografia do campo
      */
-    public function decryptField(string $fieldName): QueryExpression 
+    public function decryptField(string $fieldName): QueryExpression
     {
         $expressionField = $this->_table->find()
             ->newExpr()
@@ -266,7 +253,7 @@ class EncryptBehavior extends Behavior
     public function decryptString(string $fieldName): string
     {
         $key = Configure::read('Security.key');
-        $expression = "CONVERT(AES_DECRYPT({$fieldName},UNHEX('{$key}')) USING utf8) COLLATE utf8_general_ci";
+        $expression = "AES_DECRYPT({$fieldName}, UNHEX('{$key}'))";
 
         return $expression;
     }
@@ -277,18 +264,18 @@ class EncryptBehavior extends Behavior
      * @param string $pathFileName caminho e nome do arquivo
      * @return false|int quantidade de bytes gravados
      */
-    public function encryptFile(string $pathFileName) 
+    public function encryptFile(string $pathFileName)
     {
 		$crypted = false;
         if (file_exists($pathFileName)) {
             $content = @file_get_contents($pathFileName);
             if (!empty($content)) {
                 $key = Configure::read('Security.key');
-                $content = Security::encrypt($content, $key);            
+                $content = Security::encrypt($content, $key);
                 if (!empty($content)) {
                     $crypted = @file_put_contents($pathFileName, $content);
                 }
-            }            
+            }
         }
 
 		return $crypted;
@@ -300,18 +287,18 @@ class EncryptBehavior extends Behavior
      * @param string $pathFileName caminho e nome do arquivo
      * @return false|int quantidade de bytes gravados
      */
-    public function decryptFile(string $pathFileName) 
+    public function decryptFile(string $pathFileName)
     {
 		$decrypted = false;
         if (file_exists($pathFileName)) {
             $content = @file_get_contents($pathFileName);
             if (!empty($content)) {
                 $key = Configure::read('Security.key');
-                $content = Security::decrypt($content, $key);            
+                $content = Security::decrypt($content, $key);
                 if (!empty($content)) {
                     $decrypted = @file_put_contents($pathFileName, $content);
                 }
-            }            
+            }
         }
 
 		return $decrypted;
