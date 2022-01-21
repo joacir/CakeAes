@@ -54,24 +54,7 @@ vachar(200) -> blob
 text -> blob
 ```
 
-3 - Registre o custom Data Type Aes no *bootstrap.php*:
-```
-use Cake\Database\TypeFactory;
-
-TypeFactory::map('aes', 'CakeAes\Model\Database\Type\AesType');
-```
-
-4 - Inicializa o schema do banco de dados para sobrescrever os tipos binários para os tipos aes_encrypt dentro do seu Table:
-```
-protected function _initializeSchema(TableSchemaInterface $schema): TableSchemaInterface
-{
-    $schema->setColumnType('nome', 'aes');
-
-    return $schema;
-}
-```
-
-5 - Configure o behavior do plugin no Table:
+3 - Configure o behavior do plugin no Table:
 ```
 $this->addBehavior('CakeAes.Encrypt', [
     'fields' => ['nome', 'cpf']

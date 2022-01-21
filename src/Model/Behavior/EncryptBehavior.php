@@ -11,7 +11,7 @@ use Cake\Event\EventInterface;
 use Cake\ORM\Behavior;
 use Cake\ORM\Query;
 use Cake\Utility\Security;
-
+use Cake\Database\TypeFactory;
 /**
  * Encrypt behavior
  */
@@ -23,6 +23,11 @@ class EncryptBehavior extends Behavior
         $this->_table->decryptedValues = [];
         if (!empty($config['fields'])) {
             $this->_table->encryptFields = $config['fields'];
+            TypeFactory::map('aes', 'CakeAes\Model\Database\Type\AesType');      
+            $schema = $this->_table->getSchema();
+            foreach ($config['fields'] as $field) {
+                $schema->setColumnType($field, 'aes');
+            }
         }
     }
 
