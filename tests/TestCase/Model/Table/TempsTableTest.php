@@ -4,8 +4,10 @@ declare(strict_types=1);
 namespace CakeAes\Test\TestCase\Model\Table;
 
 use Cake\Core\Configure;
+use Cake\ORM\TableRegistry;
 use Cake\TestSuite\TestCase;
-use CakeAes\Model\Table\TempsTable;
+use TestApp\Model\Table\TempsTable;
+use Cake\Utility\Security;
 
 /**
  * CakeAes\Model\Table\TempsTable Test Case
@@ -13,11 +15,14 @@ use CakeAes\Model\Table\TempsTable;
 class TempsTableTest extends TestCase
 {
     /**
-     * Test subject
-     *
-     * @var \CakeAes\Model\Table\TempsTable
-     */
+	 * @var \Cake\ORM\Table;
+	 */
     protected $Temps;
+
+    /**
+	 * @var \Cake\ORM\Table;
+	 */
+    protected $TempOthers;
 
     /**
      * Fixtures
@@ -37,9 +42,25 @@ class TempsTableTest extends TestCase
     public function setUp(): void
     {
         parent::setUp();
-        $config = $this->getTableLocator()->exists('Temps') ? [] : ['className' => TempsTable::class];
-        $this->Temps = $this->getTableLocator()->get('CakeAes.Temps', $config);
-        Configure::write('Security.key', 'f9a73f2770c52dc4e2ce3eec60dc296745a33bfbfd06d1d8a9472de3afb72bc3');
+
+        Configure::write('Hashid', [
+            'debug' => false,
+        ]);
+        Configure::write('Security', [
+            'salt' => '',
+            'key' => 'f9a73f2770c52dc4e2ce3eec60dc296745a33bfbfd06d1d8a9472de3afb72bc3'
+        ]);        
+        Security::setSalt(Configure::read('Security.key'));
+
+        $this->Temps = TableRegistry::get('CakeAes.Temps');
+		$this->Temps->addBehavior('CakeAes.Encrypt', ['fields' => ['nome', 'cpf']]);
+
+        $this->TempOthers = TableRegistry::get('CakeAes.TempOthers');
+		$this->TempOthers->addBehavior('CakeAes.Encrypt', ['fields' => ['nome']]);
+
+        $this->Temps->hasMany('CakeAes.TempOthers');
+        $this->TempOthers->belongsTo('CakeAes.Temps');
+
         $temp = $this->Temps->get(1);
         $temp->nome = 'Vinícius Seixas';
         $this->Temps->save($temp);
@@ -56,11 +77,6 @@ class TempsTableTest extends TestCase
 
         parent::tearDown();
     }
-
-    public function testInstance(): void
-    {
-        $this->assertInstanceOf('CakeAes\Model\Table\TempsTable', $this->Temps);
-    }      
 
     public function testBehavior(): void 
     {
