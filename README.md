@@ -19,7 +19,7 @@ Inclua o plugin no composer.json do app:
         }
     }
 
-``` 
+```
 
 Execute o composer dumpautoload:
 ```
@@ -54,7 +54,24 @@ vachar(200) -> blob
 text -> blob
 ```
 
-3 - Configure o behavior do plugin no Table:
+3 - Registre o custom Data Type Aes no *bootstrap.php*:
+```
+use Cake\Database\TypeFactory;
+
+TypeFactory::map('aes', 'CakeAes\Model\Database\Type\AesType');
+```
+
+4 - Inicializa o schema do banco de dados para sobrescrever os tipos binários para os tipos aes_encrypt dentro do seu Table:
+```
+protected function _initializeSchema(TableSchemaInterface $schema): TableSchemaInterface
+{
+    $schema->setColumnType('nome', 'aes');
+
+    return $schema;
+}
+```
+
+5 - Configure o behavior do plugin no Table:
 ```
 $this->addBehavior('CakeAes.Encrypt', [
     'fields' => ['nome', 'cpf']
@@ -64,42 +81,42 @@ $this->addBehavior('CakeAes.Encrypt', [
 
 ## Para criptografar/descriptografar em fields, conditions, order e contain
 
-O funcionamento do *save()* é transparente, ou seja, na maioria das vezes não é preciso fazer nenhuma mudança para funcionar. 
+O funcionamento do *save()* é transparente, ou seja, na maioria das vezes não é preciso fazer nenhuma mudança para funcionar.
 
 - *find()* ou *get()* funciona transparente na maioria dos casos, para casos mais complexos pode ser usado o método *decryptField()* para solicitar a descriptografia no mysql.
 - o decryptField pode ser usando na *contain*, no *fields*, no *select*, ou em qualquer lugar que necessite descriptografia.
 - Exemplos:
 ```
 $new = $this->Temps->get($temp->id, ['fields' => [
-    'id', 
+    'id',
     'nome' => $this->Temps->decryptField('Temps.nome')
-]]);   
+]]);
 
 $temp = $this->Temps->find()
     ->select(['nome' => $this->Temps->decryptField('Temps.nome')])
     ->where(['id' => 2])
-    ->first();   
+    ->first();
 ```
 
-- Para *conditions* com campos criptografados, pode usar funções de comparação: 
+- Para *conditions* com campos criptografados, pode usar funções de comparação:
 ```
 $temp = $this->Temps->find()
     ->select(['nome' => $this->Temps->decryptField('Temps.nome')])
     ->where([$this->Temps->decryptEq('Temps.nome', $nome)])
-    ->first();   
+    ->first();
 
 $temp = $this->Temps->find()
     ->select([
-        'id', 
+        'id',
         'nome' => $this->Temps->decryptField('Temps.nome')
     ])
     ->where([$this->Temps->decryptLike('Temps.nome', '%Sa%')])
-    ->first();   
+    ->first();
 ```
 
 - *updateAll()* é preciso chamar o método *encrypt()*:
 ```
-$nome = $this->Temps->encrypt("José");        
+$nome = $this->Temps->encrypt("José");
 $fields = ['nome' => $nome];
 $conditions = [
     $this->Temps->decryptEq('Temps.nome', 'Maria')
@@ -123,7 +140,7 @@ $imageFile = dirname(__FILE__) . DS . 'imagem_crypted.jpg';
 $Temps->decryptFile($imageFile);
 ```
 
-### Para descriptografar e exibir o conteúdo de um arquivo criptografado 
+### Para descriptografar e exibir o conteúdo de um arquivo criptografado
 
 1 - Configure o component do plugin no Controller:
 ```
