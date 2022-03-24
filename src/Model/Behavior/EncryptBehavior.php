@@ -12,11 +12,14 @@ use Cake\ORM\Behavior;
 use Cake\ORM\Query;
 use Cake\Utility\Security;
 use Cake\Database\TypeFactory;
+use Cake\ORM\Locator\LocatorAwareTrait;
 /**
  * Encrypt behavior
  */
 class EncryptBehavior extends Behavior
 {
+    use LocatorAwareTrait;
+
     public function initialize(array $config): void
     {
         $this->_table->encryptFields = [];
@@ -69,8 +72,9 @@ class EncryptBehavior extends Behavior
 
     public function beforeFind(EventInterface $event, Query $query, ArrayObject $options, $primary)
     {
-        $this->setContainFields($query);
-        $query = $this->decryptSelect($query, $primary);
+        $associations = $query->getContain();
+        $this->setContainFields($query, $associations);
+        $query = $this->decryptSelect($query);
         $query = $this->decryptWhere($query);
         $query = $this->decryptOrder($query);
     }
@@ -81,19 +85,17 @@ class EncryptBehavior extends Behavior
      * @param Query $query query para descriptografia
      * @return Query retorna a query com os campos da select modificados
      */
-    public function decryptSelect(Query $query, $primary): Query
+    public function decryptSelect(Query $query): Query
     {
         $select = $query->clause('select');
         if (empty($select)) {
-            if ($primary) {
+            if (empty($this->_table->containEncryptedFields)) {
                 $select = $this->_table
                     ->getSchema()
                     ->columns();
             } else {
-                if (!empty($this->_table->containEncryptedFields)) {
-                    $select = $this->_table->containEncryptedFields;
-                    $this->_table->containEncryptedFields = [];
-                }
+                $select = $this->_table->containEncryptedFields;
+                $this->_table->containEncryptedFields = [];
             }
         }            
         $fields = [];
@@ -116,17 +118,20 @@ class EncryptBehavior extends Behavior
         return $query;
     }
 
-    protected function setContainFields($query) 
+    protected function setContainFields($query, $associations) 
     {
-        $associations = $query->getContain();
         foreach ($associations as $name => $config) {
-            if (!$this->_table->hasAssociation($name)) {
-                continue;
-            }
-            $association = $this->_table->getAssociation($name);
-            $target = $association->getTarget();
-            if ($target->hasBehavior('Encrypt') && !empty($config['fields'])) {
-                $target->containEncryptedFields = $config['fields'];
+            foreach ($config as $key => $options) {
+                if ($key === 'fields') {
+                    $table = $this->getTableLocator()->get($name);
+                    if (!empty($table) && $table->hasBehavior('Encrypt') && !empty($options)) {
+                        $table->containEncryptedFields = $options;
+                    }        
+                } else {
+                    if (is_array($options)) {
+                        $this->setContainFields($query, [$key => $options]);
+                    }
+                }
             }
         } 
     }
