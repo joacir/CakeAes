@@ -12,15 +12,19 @@ use Cake\ORM\Behavior;
 use Cake\ORM\Query;
 use Cake\Utility\Security;
 use Cake\Database\TypeFactory;
+use Cake\ORM\Locator\LocatorAwareTrait;
 /**
  * Encrypt behavior
  */
 class EncryptBehavior extends Behavior
 {
+    use LocatorAwareTrait;
+
     public function initialize(array $config): void
     {
         $this->_table->encryptFields = [];
         $this->_table->decryptedValues = [];
+        $this->_table->containEncryptedFields = null;
         if (!empty($config['fields'])) {
             $this->_table->encryptFields = $config['fields'];
             TypeFactory::map('aes', 'CakeAes\Model\Database\Type\AesType');      
@@ -33,7 +37,6 @@ class EncryptBehavior extends Behavior
 
     public function beforeSave(EventInterface $event, EntityInterface $entity, ArrayObject $options): void
     {
-        $entity->setVirtual([]);
         foreach ($this->_table->encryptFields as $field) {
             $value = $entity->get($field);
             if (!empty($value)) {
@@ -69,25 +72,51 @@ class EncryptBehavior extends Behavior
 
     public function beforeFind(EventInterface $event, Query $query, ArrayObject $options, $primary)
     {
-        $query = $this->decryptSelect($query);
+        $associations = $query->getContain();
+        $this->setContainFields($query, $associations);
+        $query = $this->decryptSelect($query, $primary);
         $query = $this->decryptWhere($query);
         $query = $this->decryptOrder($query);
+    }
+
+    protected function setContainFields($query, $associations) 
+    {
+        foreach ($associations as $name => $config) {
+            foreach ($config as $key => $options) {
+                if ($key === 'fields') {
+                    $table = $this->getTableLocator()->get($name);
+                    if (!empty($table) && $table->hasBehavior('Encrypt')) {
+                        $table->containEncryptedFields = $options;
+                    }        
+                } else {
+                    if (is_array($options)) {
+                        $this->setContainFields($query, [$key => $options]);
+                    }
+                }
+            }
+        } 
     }
 
     /**
      * Descriptografa os campos criptografados da clausula select
      *
      * @param Query $query query para descriptografia
+     * @param bool $primary verifica se o query é a inicial ou é uma associação
      * @return Query retorna a query com os campos da select modificados
      */
-    public function decryptSelect(Query $query): Query
+    public function decryptSelect(Query $query, $primary): Query
     {
         $select = $query->clause('select');
         if (empty($select)) {
-            $select = $this->_table
-                ->getSchema()
-                ->columns();
-        }
+            if ($primary || $this->_table->containEncryptedFields === null) {
+                $select = $this->_table
+                    ->getSchema()
+                    ->columns();
+            } else {
+                $select = $this->_table->containEncryptedFields;
+                $this->_table->containEncryptedFields = [];
+            }
+        }            
         $fields = [];
         foreach ($select as $virtual => $field) {
             if ($this->isEncrypted($field)) {
@@ -101,7 +130,9 @@ class EncryptBehavior extends Behavior
                 $fields[$virtual] = $field;
             }
         }
-        $query = $query->select($fields, true);
+        if (!empty($fields)) {
+            $query = $query->select($fields, true);
+        }
 
         return $query;
     }
