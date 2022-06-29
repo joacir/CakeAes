@@ -28,7 +28,7 @@ class AesType extends BinaryType
             return null;
         }
         if (is_string($value) || is_numeric($value) || is_resource($value)) {
-            return (string) $value;
+            return stripslashes((string)$value);
         }
         throw new \Exception(sprintf('Unable to convert %s into binary.', gettype($value)));
     }

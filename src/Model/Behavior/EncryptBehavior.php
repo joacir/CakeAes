@@ -64,6 +64,7 @@ class EncryptBehavior extends Behavior
     {
         $key = Configure::read('Security.key');
         $query = $this->_table->find();
+        $value = addslashes($value);
         $expressionValue = $query->newExpr()
             ->add("AES_ENCRYPT('{$value}',UNHEX('{$key}'))");
 
