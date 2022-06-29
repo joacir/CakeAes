@@ -27,7 +27,7 @@ class EncryptBehavior extends Behavior
         $this->_table->containEncryptedFields = null;
         if (!empty($config['fields'])) {
             $this->_table->encryptFields = $config['fields'];
-            TypeFactory::map('aes', 'CakeAes\Model\Database\Type\AesType');      
+            TypeFactory::map('aes', 'CakeAes\Model\Database\Type\AesType');
             $schema = $this->_table->getSchema();
             foreach ($config['fields'] as $field) {
                 $schema->setColumnType($field, 'aes');
@@ -79,22 +79,24 @@ class EncryptBehavior extends Behavior
         $query = $this->decryptOrder($query);
     }
 
-    protected function setContainFields($query, $associations) 
+    protected function setContainFields($query, $associations)
     {
         foreach ($associations as $name => $config) {
             foreach ($config as $key => $options) {
                 if ($key === 'fields') {
-                    $table = $this->getTableLocator()->get($name);
+                    $table = $this->getTableLocator()
+                        ->allowFallbackClass(true)
+                        ->get($name);
                     if (!empty($table) && $table->hasBehavior('Encrypt')) {
                         $table->containEncryptedFields = $options;
-                    }        
+                    }
                 } else {
                     if (is_array($options)) {
                         $this->setContainFields($query, [$key => $options]);
                     }
                 }
             }
-        } 
+        }
     }
 
     /**
@@ -116,7 +118,7 @@ class EncryptBehavior extends Behavior
                 $select = $this->_table->containEncryptedFields;
                 $this->_table->containEncryptedFields = [];
             }
-        }            
+        }
         $fields = [];
         foreach ($select as $virtual => $field) {
             if ($this->isEncrypted($field)) {
