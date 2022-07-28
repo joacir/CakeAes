@@ -19,7 +19,7 @@ class AesType extends BinaryType
      *
      * @param mixed $value The value to convert.
      * @param \Cake\Database\DriverInterface $driver The driver instance to convert with.
-     * @return resource|null
+     * @return string|null
      * @throws Exception
      */
     public function toPHP($value, DriverInterface $driver)
