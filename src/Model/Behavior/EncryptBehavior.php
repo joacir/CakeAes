@@ -71,7 +71,7 @@ class EncryptBehavior extends Behavior
         return $expressionValue;
 	}
 
-    public function beforeFind(EventInterface $event, Query $query, ArrayObject $options, $primary)
+    public function beforeFind(EventInterface $event, Query $query, ArrayObject $options, bool $primary): void
     {
         $associations = $query->getContain();
         $this->setContainFields($query, $associations);
@@ -80,7 +80,7 @@ class EncryptBehavior extends Behavior
         $query = $this->decryptOrder($query);
     }
 
-    protected function setContainFields($query, $associations)
+    protected function setContainFields(Query $query, array $associations): void
     {
         foreach ($associations as $name => $config) {
             foreach ($config as $key => $options) {
