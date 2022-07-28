@@ -154,7 +154,7 @@ class EncryptBehavior extends Behavior
             $expr->traverse(function ($condition) {
                 if (is_a($condition, 'Cake\Database\Expression\ComparisonExpression')) {
                     $field = $condition->getField();
-                    if ($this->isEncrypted($field)) {
+                    if (is_string($field) && $this->isEncrypted($field)) {
                         $condition->setField($this->decryptField($field));
                     }
                 }
@@ -281,7 +281,7 @@ class EncryptBehavior extends Behavior
      * @param string $fieldName nome do campo
      * @return QueryExpression Expressão SQL para descriptografia do campo
      */
-    public function decryptField(string $fieldName): QueryExpression
+    public function decryptField($fieldName): QueryExpression
     {
         $expressionField = $this->_table->find()
             ->newExpr()
