@@ -1,3 +1,6 @@
+/**
+ * Copy this file to app_local.php and configure your database to run tests
+ */
 <?php
 putenv('db_class=Cake\Database\Driver\Mysql');
 putenv('db_database=');
