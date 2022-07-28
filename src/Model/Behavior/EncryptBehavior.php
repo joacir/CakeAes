@@ -25,7 +25,7 @@ class EncryptBehavior extends Behavior
         $this->_table->encryptFields = [];
         $this->_table->decryptedValues = [];
         $this->_table->containEncryptedFields = null;
-        if (is_array($config['fields'])) {
+        if (isset($config['fields']) && is_array($config['fields'])) {
             $this->_table->encryptFields = $config['fields'];
             TypeFactory::map('aes', 'CakeAes\Model\Database\Type\AesType');
             $schema = $this->_table->getSchema();
