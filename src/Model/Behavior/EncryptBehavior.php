@@ -14,7 +14,7 @@ use Cake\Utility\Security;
 use Cake\Database\TypeFactory;
 use Cake\ORM\Locator\LocatorAwareTrait;
 /**
- * Encrypt behavior
+ * Encrypt Behavior
  */
 class EncryptBehavior extends Behavior
 {
@@ -55,10 +55,10 @@ class EncryptBehavior extends Behavior
     }
 
     /**
-     * Criptografa uma string de um campo
+     * Encrypt a text
      *
-     * @param string $value valor do campo
-     * @return QueryExpression Expressão SQL para criptografia do valor
+     * @param string $value text value
+     * @return QueryExpression Encrypt Expression
      */
     public function encrypt(string $value): QueryExpression
     {
@@ -103,11 +103,11 @@ class EncryptBehavior extends Behavior
     }
 
     /**
-     * Descriptografa os campos criptografados da clausula select
+     * Decrypt select encrypted fields
      *
-     * @param Query $query query para descriptografia
-     * @param bool $primary verifica se o query é a inicial ou é uma associação
-     * @return Query retorna a query com os campos da select modificados
+     * @param Query $query Query
+     * @param bool $primary Is a primary table or associated table
+     * @return Query Modified Query with decrypt expressions in found fields
      */
     public function decryptSelect(Query $query, $primary): Query
     {
@@ -143,10 +143,10 @@ class EncryptBehavior extends Behavior
     }
 
     /**
-     * Descriptografa os campos criptografados da clausula where
+     * Decrypt where encrypted fields
      *
-     * @param Query $query query para descriptografia
-     * @return Query retorna a query com os campos da where modificados
+     * @param Query $query Query
+     * @return Query Modified Query with decrypt expressions in found fields
      */
     public function decryptWhere(Query $query): Query
     {
@@ -168,10 +168,10 @@ class EncryptBehavior extends Behavior
     }
 
     /**
-     * Descriptografa os campos criptografados da clausula order by
+     * Decrypt order by encrypted fields
      *
-     * @param Query $query query para descriptografia
-     * @return Query retorna a query com os campos do order by modificados
+     * @param Query $query Query
+     * @return Query Modified Query with decrypt expressions in found fields
      */
     public function decryptOrder(Query $query): Query
     {
@@ -190,10 +190,10 @@ class EncryptBehavior extends Behavior
     }
 
     /**
-     * Verifica se é um campo criptografado
+     * Check wheter field is encrypted
      *
-     * @param string $field nome do campo para verificação
-     * @return bool retorna true se é um campo criptografado
+     * @param string $field Field name
+     * @return bool Is or not encrypted
      */
     public function isEncrypted($field): bool
     {
@@ -216,11 +216,11 @@ class EncryptBehavior extends Behavior
     }
 
     /**
-     * Expressão de comparação com campo descriptografado
+     * Get comparison expression with a encrypted field
      *
-     * @param string $fieldName nome do campo
-     * @param string $value valor para comparação
-     * @return QueryExpression Expressão SQL para comparação do campo descriptografado
+     * @param string $fieldName Field name
+     * @param string $value Text value
+     * @return QueryExpression Comparison expression
      */
     public function decryptEq(string $fieldName, string $value): QueryExpression
     {
@@ -277,10 +277,10 @@ class EncryptBehavior extends Behavior
     }
 
     /**
-     * Descriptografa um campo
+     * Decrypt a field
      *
-     * @param string $fieldName nome do campo
-     * @return QueryExpression Expressão SQL para descriptografia do campo
+     * @param string $fieldName Field name
+     * @return QueryExpression Decrypt expression
      */
     public function decryptField($fieldName): QueryExpression
     {
@@ -291,6 +291,12 @@ class EncryptBehavior extends Behavior
         return $expressionField;
     }
 
+    /**
+     * Decrypt field string
+     *
+     * @param string $fieldName Field name
+     * @return string Decrypt field string
+     */
     public function decryptString(string $fieldName): string
     {
         /** @var string $key */
@@ -301,10 +307,10 @@ class EncryptBehavior extends Behavior
     }
 
     /**
-     * Criptografa um arquivo
+     * Encrypt a file
      *
-     * @param string $pathFileName caminho e nome do arquivo
-     * @return false|int quantidade de bytes gravados
+     * @param string $pathFileName Path and name file
+     * @return false|int bytes count saved
      */
     public function encryptFile(string $pathFileName)
     {
@@ -325,10 +331,10 @@ class EncryptBehavior extends Behavior
 	}
 
     /**
-     * Descriptografa um arquivo
+     * Decrypt a file
      *
-     * @param string $pathFileName caminho e nome do arquivo
-     * @return false|int quantidade de bytes gravados
+     * @param string $pathFileName Path and name file
+     * @return false|int bytes count saved
      */
     public function decryptFile(string $pathFileName)
     {

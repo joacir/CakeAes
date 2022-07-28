@@ -16,10 +16,10 @@ use function is_string;
 class EncryptComponent extends Component
 {
     /**
-     * Descriptografa arquivo e força download
+     * Decrypt file and download
      *
-     * @param string $pathFileName Caminho e nome do arquivo
-     * @return \Cake\Http\Response response configurado para download do arquivo
+     * @param string $pathFileName Path and name of file
+     * @return \Cake\Http\Response file download
      */
     public function decryptDownload(string $pathFileName): Response
     {
@@ -27,11 +27,11 @@ class EncryptComponent extends Component
     }
 
     /**
-     * Descriptografa arquivo e renderiza no browser
+     * Decrypt file and render content on browser
      *
-     * @param string $pathFileName Caminho e nome do arquivo
-     * @param bool $download Força ou não o download do arquivo, padrão false
-     * @return \Cake\Http\Response response configurado para rendererização do arquivo
+     * @param string $pathFileName Path and name of file
+     * @param bool $download Do download or not do
+     * @return \Cake\Http\Response file content
      */
     public function decryptRender(string $pathFileName, bool $download = false): Response
     {
@@ -54,10 +54,10 @@ class EncryptComponent extends Component
     }
 
     /**
-     * Retorna o conteúdo do arquivo descriptografado
+     * Get the decrypted file content
      *
-     * @param string $pathFileName Caminho e nome do arquivo
-     * @return null|string conteúdo do arquivo descriptografado
+     * @param string $pathFileName Path and name of file
+     * @return null|string Decrypted file content
      */
     public function getDecryptedContent(string $pathFileName): ?string
     {
@@ -75,10 +75,10 @@ class EncryptComponent extends Component
     }
 
     /**
-     * Retorna o tipo do arquivo criptografado
+     * Get file extension
      *
-     * @param string $pathFileName Caminho e nome do arquivo
-     * @return null|string tipo do arquivo criptografado
+     * @param string $pathFileName Path and name of file
+     * @return null|string File extension
      */
     public function getFileType(string $pathFileName): ?string
     {
