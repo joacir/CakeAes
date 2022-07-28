@@ -27,12 +27,12 @@ class EncryptComponent extends Component
 
     /**
      * Descriptografa arquivo e renderiza no browser
-     * 
+     *
      * @param string $pathFileName Caminho e nome do arquivo
      * @param bool $download Força ou não o download do arquivo, padrão false
      * @return Response response configurado para rendererização do arquivo
      */
-    public function decryptRender(string $pathFileName, bool $download = false): Response 
+    public function decryptRender(string $pathFileName, bool $download = false): Response
     {
         $response = $this->getController()
             ->getResponse()
@@ -44,9 +44,9 @@ class EncryptComponent extends Component
                 $response = $response->withType($type)
                     ->withStringBody($content);
                 if ($download) {
-                    $response = $response->withDownload(basename($pathFileName));  
+                    $response = $response->withDownload(basename($pathFileName));
                 }
-            }            
+            }
         }
 
         return $response;
@@ -54,31 +54,32 @@ class EncryptComponent extends Component
 
     /**
      * Retorna o conteúdo do arquivo descriptografado
-     * 
+     *
      * @param string $pathFileName Caminho e nome do arquivo
-     * @return null|string conteúdo do arquivo descriptografado 
+     * @return null|string conteúdo do arquivo descriptografado
      */
-    public function getDecryptedContent(string $pathFileName): ?string 
+    public function getDecryptedContent(string $pathFileName): ?string
     {
 		$decrypted = null;
         if (file_exists($pathFileName)) {
             $content = @file_get_contents($pathFileName);
             if (!empty($content)) {
+                /** @var string $key */
                 $key = Configure::read('Security.key');
-                $decrypted = Security::decrypt($content, $key);            
-            }            
+                $decrypted = Security::decrypt($content, $key);
+            }
         }
 
 		return $decrypted;
-	}  
+	}
 
     /**
      * Retorna o tipo do arquivo criptografado
-     * 
+     *
      * @param string $pathFileName Caminho e nome do arquivo
-     * @return null|string tipo do arquivo criptografado 
+     * @return null|string tipo do arquivo criptografado
      */
-    public function getFileType(string $pathFileName): ?string 
+    public function getFileType(string $pathFileName): ?string
     {
         $type = null;
         $fileName = basename($pathFileName);

@@ -25,7 +25,7 @@ class EncryptBehavior extends Behavior
         $this->_table->encryptFields = [];
         $this->_table->decryptedValues = [];
         $this->_table->containEncryptedFields = null;
-        if (!empty($config['fields'])) {
+        if (is_array($config['fields'])) {
             $this->_table->encryptFields = $config['fields'];
             TypeFactory::map('aes', 'CakeAes\Model\Database\Type\AesType');
             $schema = $this->_table->getSchema();
@@ -39,7 +39,7 @@ class EncryptBehavior extends Behavior
     {
         foreach ($this->_table->encryptFields as $field) {
             $value = $entity->get($field);
-            if (!empty($value)) {
+            if (is_string($value)) {
                 $this->_table->decryptedValues[$field] = $value;
                 $entity->set($field, $this->encrypt($value));
             }
@@ -62,6 +62,7 @@ class EncryptBehavior extends Behavior
      */
     public function encrypt(string $value): QueryExpression
     {
+        /** @var string $key */
         $key = Configure::read('Security.key');
         $query = $this->_table->find();
         $value = addslashes($value);
@@ -150,9 +151,9 @@ class EncryptBehavior extends Behavior
     public function decryptWhere(Query $query): Query
     {
         $expr = $query->clause('where');
-        if (!empty($expr)) {
+        if ($expr instanceof \Cake\Database\Expression\QueryExpression) {
             $expr->traverse(function ($condition) {
-                if (is_a($condition, 'Cake\Database\Expression\ComparisonExpression')) {
+                if ($condition instanceof \Cake\Database\Expression\ComparisonExpression) {
                     $field = $condition->getField();
                     if (is_string($field) && $this->isEncrypted($field)) {
                         $condition->setField($this->decryptField($field));
@@ -175,7 +176,7 @@ class EncryptBehavior extends Behavior
     public function decryptOrder(Query $query): Query
     {
         $expr = $query->clause('order');
-        if (!empty($expr)) {
+        if ($expr instanceof \Cake\Database\Expression\OrderByExpression) {
             $expr->iterateParts(function ($direction, &$field) {
                 if ($this->isEncrypted($field)) {
                     $field = $this->decryptString($field);
@@ -292,6 +293,7 @@ class EncryptBehavior extends Behavior
 
     public function decryptString(string $fieldName): string
     {
+        /** @var string $key */
         $key = Configure::read('Security.key');
         $expression = "(CONVERT(AES_DECRYPT({$fieldName}, UNHEX('{$key}')) USING utf8) COLLATE utf8_general_ci)";
 
@@ -310,6 +312,7 @@ class EncryptBehavior extends Behavior
         if (file_exists($pathFileName)) {
             $content = @file_get_contents($pathFileName);
             if (!empty($content)) {
+                /** @var string $key */
                 $key = Configure::read('Security.key');
                 $content = Security::encrypt($content, $key);
                 if (!empty($content)) {
@@ -333,6 +336,7 @@ class EncryptBehavior extends Behavior
         if (file_exists($pathFileName)) {
             $content = @file_get_contents($pathFileName);
             if (!empty($content)) {
+                /** @var string $key */
                 $key = Configure::read('Security.key');
                 $content = Security::decrypt($content, $key);
                 if (!empty($content)) {
