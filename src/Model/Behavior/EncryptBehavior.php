@@ -85,10 +85,11 @@ class EncryptBehavior extends Behavior
         foreach ($associations as $name => $config) {
             foreach ($config as $key => $options) {
                 if ($key === 'fields') {
-                    $table = $this->getTableLocator()
-                        ->allowFallbackClass(true)
+                    /** @var \Cake\ORM\Locator\TableLocator $locator */
+                    $locator = $this->getTableLocator();
+                    $table = $locator->allowFallbackClass(true)
                         ->get($name);
-                    if (!empty($table) && $table->hasBehavior('Encrypt')) {
+                    if ($table->hasBehavior('Encrypt')) {
                         $table->containEncryptedFields = $options;
                     }
                 } else {
