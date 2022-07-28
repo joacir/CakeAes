@@ -1,131 +1,105 @@
 # CakeAes
-Plugin do CakePHP para criptografia de campos usando AES-256
+CakePHP plugin to encrypt/decrypt table fields using AES-256 algorithm on MySQL/MariaDB databases.
+This branch is for use with CakePHP 4.2+
 
-## Instalação
-
-Inclua o plugin no composer.json do app:
+## Install
+Install it as require dependency:
 ```
-    "require": {
-        "joacir/cake-aes": "^1.0",
-    },
-    "autoload": {
-        "psr-4": {
-            "CakeAes\\": "plugins/CakeAes/src/"
-        }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "CakeAes\\Test\\": "plugins/CakeAes/tests/"
-        }
-    }
-
+composer require joacir/CakeAes
 ```
 
-Execute o composer dumpautoload:
+## Setup
+Enable the plugin in your Application.php or call
 ```
-php composer.phar dumpautoload
-```
-
-Carregue o plugin no Application.php do app:
-```
-public function bootstrap(): void
-{
-    $this->addPlugin('CakeAes');
-}
+bin/cake plugin load CakeAes
 ```
 
-## Para gravar/recuperar uma informação criptografada
-
-1 - Configure o hash de segurança no *app_local.php* do app:
+Configure a new security hash in *app_local.php*:
 ```
 'Security' => [
     'key' => '34601affc03a12d4b963b6123ab3afcb',
 ],
 ```
-- Essa será a chave usada pelo plugin para criptografia.
-- NUNCA usar a mesma chave para apps diferentes.
-- Depois de gerada, NUNCA alterar a chave.
-- A chave deve conter no mínimo 32 digitos em hexadecimal.
+- This will be the key used by the plugin for encryption.
+- NEVER use the same key for different apps.
+- Once generated, NEVER change the key.
+- The key must contain at least 32 digits in hexadecimal.
 
-2 - Altere o tipo de dados dos campos na table do MySQL para binary:
+Change the type field of the fields you want to encrypt on your tables to a binary type:
 ```
 char(20) -> blob
-vachar(200) -> blob
+vachar(200) -> varbinary(200)
 text -> blob
 ```
+- Only *string* types works. Use only *VarBinary* or *Blob* types.
 
-3 - Configure o behavior do plugin no Table:
+Load the behavior on your table *initialize()* method:
 ```
 $this->addBehavior('CakeAes.Encrypt', [
-    'fields' => ['nome', 'cpf']
+    'fields' => ['name', 'card', 'phone']
 ]);
 ```
-*fields*: só informe campos do tipo "string", todos os campos informados aqui deverão estar na table como "VarBinary" ou "Blob".
 
-## Para criptografar/descriptografar em fields, conditions, order e contain
+## Usage
 
-O funcionamento do *save()* é transparente, ou seja, na maioria das vezes não é preciso fazer nenhuma mudança para funcionar.
+### To encrypt fields
 
-- *find()* ou *get()* funciona transparente na maioria dos casos, para casos mais complexos pode ser usado o método *decryptField()* para solicitar a descriptografia no mysql.
-- o decryptField pode ser usando na *contain*, no *fields*, no *select*, ou em qualquer lugar que necessite descriptografia.
-- Exemplos:
+Nothing is necessary, the EncryptBehavior do the encryption automatically when you set the *fields* in settings.
+
+### To decrypt fields, conditions, order and contain
+
+The *find()* ou *get()* works without changes, in complex queries you can use *decryptField()* or *decryptString()*.
 ```
 $new = $this->Temps->get($temp->id, ['fields' => [
     'id',
-    'nome' => $this->Temps->decryptField('Temps.nome')
+    'name' => $this->Temps->decryptField('Temps.name')
 ]]);
 
 $temp = $this->Temps->find()
-    ->select(['nome' => $this->Temps->decryptField('Temps.nome')])
+    ->select(['name' => $this->Temps->decryptField('Temps.name')])
     ->where(['id' => 2])
     ->first();
 ```
 
-- Para *conditions* com campos criptografados, pode usar funções de comparação:
+You can use *decryptEq()* in *conditions*:
 ```
 $temp = $this->Temps->find()
-    ->select(['nome' => $this->Temps->decryptField('Temps.nome')])
-    ->where([$this->Temps->decryptEq('Temps.nome', $nome)])
+    ->select(['name' => $this->Temps->decryptField('Temps.name')])
+    ->where([$this->Temps->decryptEq('Temps.name', $name)])
     ->first();
 
 $temp = $this->Temps->find()
     ->select([
         'id',
-        'nome' => $this->Temps->decryptField('Temps.nome')
+        'name' => $this->Temps->decryptField('Temps.name')
     ])
-    ->where([$this->Temps->decryptLike('Temps.nome', '%Sa%')])
+    ->where([$this->Temps->decryptLike('Temps.name', '%Sa%')])
     ->first();
 ```
 
-- *updateAll()* é preciso chamar o método *encrypt()*:
+In *updateAll()* you can use *encrypt()* to encrypt:
 ```
-$nome = $this->Temps->encrypt("José");
-$fields = ['nome' => $nome];
+$name = $this->Temps->encrypt("José");
+$fields = ['name' => $name];
 $conditions = [
-    $this->Temps->decryptEq('Temps.nome', 'Maria')
+    $this->Temps->decryptEq('Temps.name', 'Maria')
 ];
 $this->Temps->updateAll($fields, $conditions);
 ```
 
-## Para criptografar/descriptografar um arquivo já gravado no disco
+### To encrypt/decrypt a file
 
-1 - Para criptografar um arquivo já gravado no disco:
 ```
-// Use sempre o path + name completo do arquivo, exemplo:
 $imageFile = dirname(__FILE__) . DS . 'imagem.jpg';
 $Temps->encryptFile($imageFile);
-```
 
-2 - Para descriptografar um arquivo criptografado já gravado no disco:
-```
-// Use sempre o path + name completo do arquivo, exemplo:
 $imageFile = dirname(__FILE__) . DS . 'imagem_crypted.jpg';
 $Temps->decryptFile($imageFile);
 ```
 
-### Para descriptografar e exibir o conteúdo de um arquivo criptografado
+### To decrypt a file in a controller
 
-1 - Configure o component do plugin no Controller:
+Load de Encrypt Component:
 ```
 public function initialize(): void
 {
@@ -133,32 +107,16 @@ public function initialize(): void
 }
 ```
 
-2 - Para descriptografar e mostrar o conteúdo do arquivo no browser:
+To decrypt and render the content:
 ```
-// Use sempre o path + name completo do arquivo, exemplo:
 $imageFile = dirname(__FILE__) . DS . 'imagem_encrypted.jpg';
 
 return $this->Encrypt->decryptRender($imageFile);
 ```
 
-3 - Para descriptografar e fazer o download do conteúdo do arquivo no browser:
+To decrypt and download a file:
 ```
-// Use sempre o path + name completo do arquivo, exemplo:
 $imageFile = dirname(__FILE__) . DS . 'imagem_encrypted.jpg';
 
 return $this->Encrypt->decryptDownload($imageFile);
-```
-
-### Testes
-
-Para testar a visualização e download no app use as urls:
-
-- http://[URL_APP]/cake-aes/encrypt-tests/image
-
-- http://[URL_APP]/cake-aes/encrypt-tests/download
-
-Testes Unitários:
-
-```
-phpunit .\plugins\CakeAes\tests\TestCase\Model\Table\TempsTableTest.php
 ```

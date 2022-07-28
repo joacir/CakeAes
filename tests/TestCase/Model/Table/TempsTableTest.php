@@ -6,7 +6,6 @@ namespace CakeAes\Test\TestCase\Model\Table;
 use Cake\Core\Configure;
 use Cake\ORM\TableRegistry;
 use Cake\TestSuite\TestCase;
-use TestApp\Model\Table\TempsTable;
 use Cake\Utility\Security;
 
 /**
@@ -14,14 +13,10 @@ use Cake\Utility\Security;
  */
 class TempsTableTest extends TestCase
 {
-    /**
-	 * @var \Cake\ORM\Table;
-	 */
+    /** @var \Cake\ORM\Table; */
     protected $Temps;
 
-    /**
-	 * @var \Cake\ORM\Table;
-	 */
+    /** @var \Cake\ORM\Table; */
     protected $TempOthers;
 
     /**
@@ -49,14 +44,14 @@ class TempsTableTest extends TestCase
         Configure::write('Security', [
             'salt' => '',
             'key' => 'f9a73f2770c52dc4e2ce3eec60dc296745a33bfbfd06d1d8a9472de3afb72bc3'
-        ]);        
+        ]); 
         Security::setSalt(Configure::read('Security.key'));
 
         $this->Temps = TableRegistry::get('CakeAes.Temps');
-		$this->Temps->addBehavior('CakeAes.Encrypt', ['fields' => ['nome', 'cpf']]);
+        $this->Temps->addBehavior('CakeAes.Encrypt', ['fields' => ['nome', 'cpf']]);
 
         $this->TempOthers = TableRegistry::get('CakeAes.TempOthers');
-		$this->TempOthers->addBehavior('CakeAes.Encrypt', ['fields' => ['nome']]);
+        $this->TempOthers->addBehavior('CakeAes.Encrypt', ['fields' => ['nome']]);
 
         $this->Temps->hasMany('CakeAes.TempOthers');
         $this->TempOthers->belongsTo('CakeAes.Temps');
@@ -96,22 +91,22 @@ class TempsTableTest extends TestCase
         $new = $this->Temps->get($temp->id, ['fields' => [
             'id', 
             'nome'
-        ]]);   
+        ]]); 
         $this->assertEquals($nome, $new->nome);
 
-        $new = $this->Temps->get($temp->id);   
+        $new = $this->Temps->get($temp->id); 
         $this->assertEquals($nome, $new->nome);
 
         $temp = $this->Temps->find()
             ->select(['nome'])
             ->where(['id' => 2])
-            ->first();   
+            ->first(); 
         $this->assertEquals($nome, $temp->nome);
 
         $temp = $this->Temps->find()
             ->select(['nome'])
             ->where(['nome' => $nome])
-            ->first();   
+            ->first(); 
         $this->assertEquals($nome, $temp->nome);
 
         $temp = $this->Temps->find()
@@ -120,23 +115,23 @@ class TempsTableTest extends TestCase
                 'nome'
             ])
             ->where(['Temps.nome LIKE' => '%Sa%'])
-            ->first();   
+            ->first(); 
         $this->assertEquals($nome, $temp->nome);
 
         $temp = $this->Temps->get($temp->id);
         $temp->nome = 'Maria';
-        $this->Temps->save($temp);        
+        $this->Temps->save($temp); 
         $update = $this->Temps->get($temp->id, ['fields' => ['nome']]);
         $this->assertEquals('Maria', $update->nome);
 
-        $nome = $this->Temps->encrypt("José");        
+        $nome = $this->Temps->encrypt("José"); 
         $fields = ['nome' => $nome];
         $conditions = [
             $this->Temps->decryptEq('Temps.nome', 'Maria')
         ];
         $this->Temps->updateAll($fields, $conditions);
         $update = $this->Temps->get($temp->id, ['fields' => ['nome']]);
-        $this->assertEquals('José', $update->nome);        
+        $this->assertEquals('José', $update->nome); 
     }
 
     public function testConditionsAndContainDecrypt(): void 
@@ -185,7 +180,7 @@ class TempsTableTest extends TestCase
             ]]])
             ->first();
         $this->assertEquals($nome, $other->temp->nome);
-        $this->assertEquals($otherNome, $other->nome);        
+        $this->assertEquals($otherNome, $other->nome); 
 
         $other = $this->Temps->TempOthers->find()
             ->select([
@@ -215,7 +210,7 @@ class TempsTableTest extends TestCase
                 ]
             ]])
             ->first();
-        $this->assertEquals($nome, $other->temp->nome);        
+        $this->assertEquals($nome, $other->temp->nome); 
         
         $query = $this->Temps->TempOthers->find();
         $other = $query->select([
@@ -231,7 +226,7 @@ class TempsTableTest extends TestCase
                 ]
             ]])
             ->first();
-        $this->assertEquals($nome, $other->temp->nome);        
+        $this->assertEquals($nome, $other->temp->nome); 
     }
 
     public function testOrderDecrypt(): void 
@@ -270,6 +265,6 @@ class TempsTableTest extends TestCase
         $this->assertTrue($done !== false);
 
         $done = $this->Temps->decryptFile($imageFile);
-        $this->assertTrue($done !== false);                                                      
-    }    
+        $this->assertTrue($done !== false); 
+    } 
 }

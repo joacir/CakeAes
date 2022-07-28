@@ -5,7 +5,7 @@ namespace CakeAes\Model\Database\Type;
 
 use Cake\Database\DriverInterface;
 use Cake\Database\Type\BinaryType;
-
+use \Exception;
 /**
  * Binary type converter.
  *
@@ -19,8 +19,8 @@ class AesType extends BinaryType
      *
      * @param mixed $value The value to convert.
      * @param \Cake\Database\DriverInterface $driver The driver instance to convert with.
-     * @return resource|null
-     * @throws \Cake\Core\Exception\Exception
+     * @return string|null
+     * @throws Exception
      */
     public function toPHP($value, DriverInterface $driver)
     {
@@ -30,6 +30,6 @@ class AesType extends BinaryType
         if (is_string($value) || is_numeric($value) || is_resource($value)) {
             return stripslashes((string)$value);
         }
-        throw new \Exception(sprintf('Unable to convert %s into binary.', gettype($value)));
+        throw new Exception(sprintf('Unable to convert %s into binary.', gettype($value)));
     }
 }

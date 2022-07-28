@@ -1,0 +1,11 @@
+parameters:
+    level: 9
+    checkMissingIterableValueType: false
+    treatPhpDocTypesAsCertain: false
+    checkGenericClassInNonGenericObjectType: false
+    paths:
+        - src/
+    excludePaths:
+        - src/Plugin.php
+    ignoreErrors:
+        - '#Access to an undefined property Cake\\ORM\\Table::+[a-zA-Z0-9\\$]#'

@@ -14,7 +14,7 @@ use Cake\Utility\Security;
 use Cake\Database\TypeFactory;
 use Cake\ORM\Locator\LocatorAwareTrait;
 /**
- * Encrypt behavior
+ * Encrypt Behavior
  */
 class EncryptBehavior extends Behavior
 {
@@ -25,7 +25,7 @@ class EncryptBehavior extends Behavior
         $this->_table->encryptFields = [];
         $this->_table->decryptedValues = [];
         $this->_table->containEncryptedFields = null;
-        if (!empty($config['fields'])) {
+        if (is_array($config['fields'])) {
             $this->_table->encryptFields = $config['fields'];
             TypeFactory::map('aes', 'CakeAes\Model\Database\Type\AesType');
             $schema = $this->_table->getSchema();
@@ -39,7 +39,7 @@ class EncryptBehavior extends Behavior
     {
         foreach ($this->_table->encryptFields as $field) {
             $value = $entity->get($field);
-            if (!empty($value)) {
+            if (is_string($value)) {
                 $this->_table->decryptedValues[$field] = $value;
                 $entity->set($field, $this->encrypt($value));
             }
@@ -55,13 +55,14 @@ class EncryptBehavior extends Behavior
     }
 
     /**
-     * Criptografa uma string de um campo
+     * Encrypt a text
      *
-     * @param string $value valor do campo
-     * @return QueryExpression Expressão SQL para criptografia do valor
+     * @param string $value text value
+     * @return QueryExpression Encrypt Expression
      */
     public function encrypt(string $value): QueryExpression
     {
+        /** @var string $key */
         $key = Configure::read('Security.key');
         $query = $this->_table->find();
         $value = addslashes($value);
@@ -71,7 +72,7 @@ class EncryptBehavior extends Behavior
         return $expressionValue;
 	}
 
-    public function beforeFind(EventInterface $event, Query $query, ArrayObject $options, $primary)
+    public function beforeFind(EventInterface $event, Query $query, ArrayObject $options, bool $primary): void
     {
         $associations = $query->getContain();
         $this->setContainFields($query, $associations);
@@ -80,15 +81,16 @@ class EncryptBehavior extends Behavior
         $query = $this->decryptOrder($query);
     }
 
-    protected function setContainFields($query, $associations)
+    protected function setContainFields(Query $query, array $associations): void
     {
         foreach ($associations as $name => $config) {
             foreach ($config as $key => $options) {
                 if ($key === 'fields') {
-                    $table = $this->getTableLocator()
-                        ->allowFallbackClass(true)
+                    /** @var \Cake\ORM\Locator\TableLocator $locator */
+                    $locator = $this->getTableLocator();
+                    $table = $locator->allowFallbackClass(true)
                         ->get($name);
-                    if (!empty($table) && $table->hasBehavior('Encrypt')) {
+                    if ($table->hasBehavior('Encrypt')) {
                         $table->containEncryptedFields = $options;
                     }
                 } else {
@@ -101,11 +103,11 @@ class EncryptBehavior extends Behavior
     }
 
     /**
-     * Descriptografa os campos criptografados da clausula select
+     * Decrypt select encrypted fields
      *
-     * @param Query $query query para descriptografia
-     * @param bool $primary verifica se o query é a inicial ou é uma associação
-     * @return Query retorna a query com os campos da select modificados
+     * @param Query $query Query
+     * @param bool $primary Is a primary table or associated table
+     * @return Query Modified Query with decrypt expressions in found fields
      */
     public function decryptSelect(Query $query, $primary): Query
     {
@@ -141,19 +143,19 @@ class EncryptBehavior extends Behavior
     }
 
     /**
-     * Descriptografa os campos criptografados da clausula where
+     * Decrypt where encrypted fields
      *
-     * @param Query $query query para descriptografia
-     * @return Query retorna a query com os campos da where modificados
+     * @param Query $query Query
+     * @return Query Modified Query with decrypt expressions in found fields
      */
     public function decryptWhere(Query $query): Query
     {
         $expr = $query->clause('where');
-        if (!empty($expr)) {
+        if ($expr instanceof \Cake\Database\Expression\QueryExpression) {
             $expr->traverse(function ($condition) {
-                if (is_a($condition, 'Cake\Database\Expression\ComparisonExpression')) {
+                if ($condition instanceof \Cake\Database\Expression\ComparisonExpression) {
                     $field = $condition->getField();
-                    if ($this->isEncrypted($field)) {
+                    if (is_string($field) && $this->isEncrypted($field)) {
                         $condition->setField($this->decryptField($field));
                     }
                 }
@@ -166,15 +168,15 @@ class EncryptBehavior extends Behavior
     }
 
     /**
-     * Descriptografa os campos criptografados da clausula order by
+     * Decrypt order by encrypted fields
      *
-     * @param Query $query query para descriptografia
-     * @return Query retorna a query com os campos do order by modificados
+     * @param Query $query Query
+     * @return Query Modified Query with decrypt expressions in found fields
      */
     public function decryptOrder(Query $query): Query
     {
         $expr = $query->clause('order');
-        if (!empty($expr)) {
+        if ($expr instanceof \Cake\Database\Expression\OrderByExpression) {
             $expr->iterateParts(function ($direction, &$field) {
                 if ($this->isEncrypted($field)) {
                     $field = $this->decryptString($field);
@@ -188,10 +190,10 @@ class EncryptBehavior extends Behavior
     }
 
     /**
-     * Verifica se é um campo criptografado
+     * Check wheter field is encrypted
      *
-     * @param string $field nome do campo para verificação
-     * @return bool retorna true se é um campo criptografado
+     * @param string $field Field name
+     * @return bool Is or not encrypted
      */
     public function isEncrypted($field): bool
     {
@@ -214,11 +216,11 @@ class EncryptBehavior extends Behavior
     }
 
     /**
-     * Expressão de comparação com campo descriptografado
+     * Get comparison expression with a encrypted field
      *
-     * @param string $fieldName nome do campo
-     * @param string $value valor para comparação
-     * @return QueryExpression Expressão SQL para comparação do campo descriptografado
+     * @param string $fieldName Field name
+     * @param string $value Text value
+     * @return QueryExpression Comparison expression
      */
     public function decryptEq(string $fieldName, string $value): QueryExpression
     {
@@ -275,12 +277,12 @@ class EncryptBehavior extends Behavior
     }
 
     /**
-     * Descriptografa um campo
+     * Decrypt a field
      *
-     * @param string $fieldName nome do campo
-     * @return QueryExpression Expressão SQL para descriptografia do campo
+     * @param string $fieldName Field name
+     * @return QueryExpression Decrypt expression
      */
-    public function decryptField(string $fieldName): QueryExpression
+    public function decryptField($fieldName): QueryExpression
     {
         $expressionField = $this->_table->find()
             ->newExpr()
@@ -289,8 +291,15 @@ class EncryptBehavior extends Behavior
         return $expressionField;
     }
 
+    /**
+     * Decrypt field string
+     *
+     * @param string $fieldName Field name
+     * @return string Decrypt field string
+     */
     public function decryptString(string $fieldName): string
     {
+        /** @var string $key */
         $key = Configure::read('Security.key');
         $expression = "(CONVERT(AES_DECRYPT({$fieldName}, UNHEX('{$key}')) USING utf8) COLLATE utf8_general_ci)";
 
@@ -298,10 +307,10 @@ class EncryptBehavior extends Behavior
     }
 
     /**
-     * Criptografa um arquivo
+     * Encrypt a file
      *
-     * @param string $pathFileName caminho e nome do arquivo
-     * @return false|int quantidade de bytes gravados
+     * @param string $pathFileName Path and name file
+     * @return false|int bytes count saved
      */
     public function encryptFile(string $pathFileName)
     {
@@ -309,6 +318,7 @@ class EncryptBehavior extends Behavior
         if (file_exists($pathFileName)) {
             $content = @file_get_contents($pathFileName);
             if (!empty($content)) {
+                /** @var string $key */
                 $key = Configure::read('Security.key');
                 $content = Security::encrypt($content, $key);
                 if (!empty($content)) {
@@ -321,10 +331,10 @@ class EncryptBehavior extends Behavior
 	}
 
     /**
-     * Descriptografa um arquivo
+     * Decrypt a file
      *
-     * @param string $pathFileName caminho e nome do arquivo
-     * @return false|int quantidade de bytes gravados
+     * @param string $pathFileName Path and name file
+     * @return false|int bytes count saved
      */
     public function decryptFile(string $pathFileName)
     {
@@ -332,6 +342,7 @@ class EncryptBehavior extends Behavior
         if (file_exists($pathFileName)) {
             $content = @file_get_contents($pathFileName);
             if (!empty($content)) {
+                /** @var string $key */
                 $key = Configure::read('Security.key');
                 $content = Security::decrypt($content, $key);
                 if (!empty($content)) {
