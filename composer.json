@@ -3,7 +3,7 @@
     "description": "Encrypt and decrypt fields using AES-256 plugin for CakePHP",
     "type": "cakephp-plugin",
     "license": "MIT",
-    "keywords": ["aes-256","php","encrypt"],
+    "keywords": ["aes-256","php","encrypt","LGPD"],
     "homepage": "https://joacir.dev",
     "authors": [
         {
@@ -18,7 +18,9 @@
         "cakephp/cakephp": "^4.2.0"
     },
     "require-dev": {
-        "phpunit/phpunit": "^9.5"
+        "phpunit/phpunit": "^9.5",
+        "cakephp/cakephp-codesniffer": "^4.5",
+        "phpstan/phpstan": "@stable"
     },
     "autoload": {
         "psr-4": {
@@ -29,7 +31,13 @@
         "psr-4": {
             "CakeAes\\Test\\": "tests/",
             "Cake\\Test\\": "vendor/cakephp/cakephp/tests/",
-            "TestApp\\": "tests/test_app/src/"            
+            "TestApp\\": "tests/test_app/src/"
         }
+    },
+    "scripts": {
+        "cs-check": "vendor/bin/phpcs --colors -p -v --standard=phpcs.xml --extensions=php --ignore=autoload.php, src/ tests/",
+        "cs-fix": "vendor/bin/phpcbf --colors -p -v --standard=phpcs.xml --extensions=php --ignore=autoload.php src/ tests/",
+        "stan": "vendor/bin/phpstan --memory-limit 0",
+        "test": "vendor/bin/phpunit tests"
     }
 }

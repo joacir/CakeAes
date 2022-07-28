@@ -1,0 +1,9 @@
+parameters:
+    level: 0
+    checkMissingIterableValueType: false
+    treatPhpDocTypesAsCertain: false
+    checkGenericClassInNonGenericObjectType: false
+    paths:
+        - src/
+    excludePaths:
+        - src/Plugin.php
