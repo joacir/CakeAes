@@ -29,6 +29,7 @@ class TempOthersFixture extends TestFixture
         ],
     ];
     // phpcs:enable
+
     /**
      * Init method
      *
@@ -43,6 +44,7 @@ class TempOthersFixture extends TestFixture
                 'nome' => 'Lorem ipsum dolor sit amet',
             ],
         ];
+
         parent::init();
     }
 }

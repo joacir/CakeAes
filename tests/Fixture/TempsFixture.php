@@ -29,6 +29,7 @@ class TempsFixture extends TestFixture
         ],
     ];
     // phpcs:enable
+
     /**
      * Init method
      *
@@ -43,6 +44,7 @@ class TempsFixture extends TestFixture
                 'cpf' => '12345678900',
             ],
         ];
+
         parent::init();
     }
 }
