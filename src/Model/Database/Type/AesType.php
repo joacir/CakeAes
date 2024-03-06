@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace CakeAes\Model\Database\Type;
 
-use Cake\Database\DriverInterface;
+use Cake\Database\Driver;
 use Cake\Database\Type\BinaryType;
 use \Exception;
 /**
