@@ -39,5 +39,10 @@
         "cs-fix": "vendor/bin/phpcbf --colors -p -v --standard=phpcs.xml --extensions=php --ignore=autoload.php src/ tests/",
         "stan": "vendor/bin/phpstan --memory-limit 0",
         "test": "vendor/bin/phpunit tests"
+    },
+    "extra": {
+        "installer-paths": {
+            "plugins/CakeAes": ["lupainformatica/cake-aes"]
+        }
     }
 }
