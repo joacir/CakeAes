@@ -43,7 +43,7 @@
     },
     "extra": {
         "installer-paths": {
-            "plugins/CakeAes": ["lupainformatica/cake-aes"]
+            "plugins/CakeAes": ["vendor/lupainformatica/cake-aes"]
         }
     }
 }
