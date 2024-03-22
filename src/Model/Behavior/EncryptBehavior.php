@@ -5,6 +5,8 @@ namespace CakeAes\Model\Behavior;
 
 use ArrayObject;
 use Cake\Core\Configure;
+use Cake\Database\Expression\FunctionExpression;
+use Cake\Database\Expression\IdentifierExpression;
 use Cake\Database\Expression\QueryExpression;
 use Cake\Datasource\EntityInterface;
 use Cake\Event\EventInterface;
@@ -124,6 +126,10 @@ class EncryptBehavior extends Behavior
         }
         $fields = [];
         foreach ($select as $virtual => $field) {
+            if ($field instanceof FunctionExpression) {
+                $this->decryptFunctionExpressionField($field);
+            }
+
             if ($this->isEncrypted($field)) {
                 $table = $this->_table->getAlias();
                 if (strpos($field, '.') !== false) {
@@ -353,4 +359,23 @@ class EncryptBehavior extends Behavior
 
 		return $decrypted;
 	}
+
+    /**
+     * Decrypts a function expression field
+     *
+     * @param FunctionExpression $field
+     * @return void
+     */
+    public function decryptFunctionExpressionField(FunctionExpression $field)
+    {
+        $field->iterateParts(function ($part) {
+            if ($part instanceof IdentifierExpression && $this->isEncrypted($part->getIdentifier())) {
+                $part->setIdentifier($this->decryptString($part->getIdentifier()));
+            } else if (is_string($part) && $this->isEncrypted($part)) {
+                $part = $this->decryptString($part);
+            }
+
+            return $part;
+        });
+    }
 }
