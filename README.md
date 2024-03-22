@@ -5,7 +5,8 @@ This branch is for use with CakePHP 4.2+
 ## Install
 Install it as require dependency:
 ```
-composer require joacir/CakeAes
+composer require joacir/CakeAes:^1 // CakePHP 4
+composer require joacir/CakeAes:^2 // CakePHP 5
 ```
 
 ## Setup
