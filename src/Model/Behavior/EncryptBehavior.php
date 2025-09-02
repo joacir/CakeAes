@@ -32,7 +32,9 @@ class EncryptBehavior extends Behavior
             TypeFactory::map('aes', 'CakeAes\Model\Database\Type\AesType');
             $schema = $this->_table->getSchema();
             foreach ($config['fields'] as $field) {
-                $schema->setColumnType($field, 'aes');
+                if ($schema->hasColumn($field)) {
+                    $schema->setColumnType($field, 'aes');
+                }
             }
         }
     }
