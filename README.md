@@ -1,6 +1,6 @@
 # CakeAes
 CakePHP plugin to encrypt/decrypt table fields using AES-256 algorithm on MySQL/MariaDB databases.
-This branch is for use with CakePHP 4.2+
+This branch is for use with CakePHP 5.0+. Use branch "main-cake4" to use with CakePHP 4.0+
 
 ## Install
 Install it as require dependency:
